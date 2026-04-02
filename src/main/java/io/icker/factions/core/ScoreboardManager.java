@@ -58,8 +58,8 @@ public class ScoreboardManager {
                 server.getCommands().performPrefixedCommand(silentSource, "scoreboard players display name FactionRank factions {\"text\":\"Rank: %factions:rank%\"}");
 
                 // Power
-                server.getCommands().performPrefixedCommand(silentSource, "scoreboard players display name FactionPower factions {\"text\":\"Power: %factions:power%/%factions:max_power%✦\",\"color\":\"white\"}");
-                server.getCommands().performPrefixedCommand(silentSource, "scoreboard players display name FactionPower factions {\"text\":\"Power: %factions:power%/%factions:max_power%✦\"}");
+                server.getCommands().performPrefixedCommand(silentSource, "scoreboard players display name FactionPower factions {\"text\":\"Power: %factions:power%/%factions:max_power%\",\"color\":\"white\"}");
+                server.getCommands().performPrefixedCommand(silentSource, "scoreboard players display name FactionPower factions {\"text\":\"Power: %factions:power%/%factions:max_power%\"}");
 
                 // Claims Heading
                 server.getCommands().performPrefixedCommand(silentSource, "scoreboard players display name FactionClaimsTitle factions {\"text\":\"--- Claims ---\",\"color\":\"gold\"}");
