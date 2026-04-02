@@ -1,4 +1,6 @@
 <div align="center">
+ 
+# YOU MUST HAVE [Placeholder API](https://modrinth.com/mod/placeholder-api) and [PAPI Scoreboard](https://github.com/H3LiiiX/PAPI-Scoreboard)
 
 <img alt="Factions Mod Icon" src="src/main/resources/assets/factions/icon.png">
 
