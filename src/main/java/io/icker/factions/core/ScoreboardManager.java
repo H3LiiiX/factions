@@ -13,7 +13,7 @@ public class ScoreboardManager {
             CommandSourceStack silentSource = server.createCommandSourceStack().withSuppressedOutput();
             
             server.getCommands().performPrefixedCommand(silentSource, "scoreboard objectives add factions dummy {\"text\":\"FACTIONS\",\"color\":\"red\"}");
-
+            server.getCommands().performPrefixedCommand(silentSource, "scoreboard objectives modify factions numberformat blank");
             server.getCommands().performPrefixedCommand(silentSource, "scoreboard objectives setdisplay sidebar factions");
             
             server.getCommands().performPrefixedCommand(silentSource, "scoreboard players set FactionName factions 0");
