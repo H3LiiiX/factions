@@ -6,6 +6,7 @@ import net.minecraft.commands.CommandSourceStack;
 
 public class ScoreboardManager {
     private static int tickCounter = 0;
+    private static final java.util.HashMap<java.util.UUID, String> titleCache = new java.util.HashMap<>();
 
     public static void register() {
         
@@ -15,6 +16,9 @@ public class ScoreboardManager {
             server.getCommands().performPrefixedCommand(silentSource, "scoreboard objectives add factions dummy {\"text\":\"FACTIONS\",\"color\":\"red\"}");
             server.getCommands().performPrefixedCommand(silentSource, "scoreboard objectives modify factions numberformat blank");
             server.getCommands().performPrefixedCommand(silentSource, "scoreboard objectives setdisplay sidebar factions");
+
+            server.getCommands().performPrefixedCommand(silentSource, "scoreboard objectives add faction_title dummy {\"text\":\"\"}");
+            server.getCommands().performPrefixedCommand(silentSource, "scoreboard objectives setdisplay below_name faction_title");
             
             server.getCommands().performPrefixedCommand(silentSource, "scoreboard players set FactionName factions 0");
             server.getCommands().performPrefixedCommand(silentSource, "scoreboard players set FactionRank factions -1");
@@ -100,6 +104,33 @@ public class ScoreboardManager {
 
                 server.getCommands().performPrefixedCommand(silentSource, "scoreboard players display name FactionLeaderRank factions {\"text\":\"%factions:leaderboard_rank%\",\"color\":\"white\"}");
                 server.getCommands().performPrefixedCommand(silentSource, "scoreboard players display name FactionLeaderRank factions {\"text\":\"%factions:leaderboard_rank%\"}");
+
+                for (net.minecraft.server.level.ServerPlayer player : server.getPlayerList().getPlayers()) {
+                    io.icker.factions.api.persistents.User user = io.icker.factions.api.persistents.User.get(player.getUUID());
+                    io.icker.factions.api.persistents.Faction faction = user.getFaction();
+                    String playerName = player.getScoreboardName();
+
+                    String text;
+                    String color;
+                    if (faction != null) {
+                        text = " " + faction.getName();
+                        color = faction.getColor().getName();
+                    } else {
+                        text = " Outcast";
+                        color = "gray";
+                    }
+
+                    String currentState = text + ":" + color;
+                    String cachedState = titleCache.get(player.getUUID());
+
+                    if (!currentState.equals(cachedState)) {
+                        server.getCommands().performPrefixedCommand(silentSource, "scoreboard players set " + playerName + " faction_title 0");
+                        server.getCommands().performPrefixedCommand(silentSource, 
+                                "scoreboard players display numberformat " + playerName + " faction_title fixed {\"text\":\"" + text + "\",\"color\":\"" + color + "\"}");
+                        
+                        titleCache.put(player.getUUID(), currentState);
+                    }
+                }
             }
         });
     }
