@@ -8,4 +8,7 @@ public class SafeConfig {
 
     @SerializedName("double")
     public boolean DOUBLE = true;
+
+    @SerializedName("command")
+    public boolean COMMAND = true;
 }

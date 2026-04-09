@@ -6,6 +6,7 @@ import eu.pb4.placeholders.api.Placeholders;
 import io.icker.factions.FactionsMod;
 import io.icker.factions.api.persistents.Faction;
 import io.icker.factions.api.persistents.User;
+import io.icker.factions.api.persistents.Claim;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -15,6 +16,7 @@ import net.minecraft.resources.Identifier;
 import xyz.nucleoid.server.translations.api.Localization;
 import xyz.nucleoid.server.translations.api.language.ServerLanguage;
 
+import java.util.List;
 import java.util.function.Function;
 
 public class PlaceholdersWrapper {
@@ -43,7 +45,7 @@ public class PlaceholdersWrapper {
                 "name",
                 (member) -> {
                     Faction faction = member.getFaction();
-                    if (faction == null) return FORMATTED_NULL;
+                    if (faction == null) return Component.literal("Outcast").withStyle(ChatFormatting.GRAY);
 
                     return Component.literal(faction.getName())
                             .withStyle(member.getFaction().getColor());
@@ -70,9 +72,12 @@ public class PlaceholdersWrapper {
         register(
                 "rank",
                 (member) -> {
-                    if (!member.isInFaction()) return FORMATTED_NULL;
+                    if (!member.isInFaction()) return Component.literal("None").withStyle(ChatFormatting.GRAY);
 
-                    return Component.nullToEmpty(member.getRankName());
+                    String rankName = member.getRankName();
+                    String capitalizedRank = rankName.substring(0, 1).toUpperCase() + rankName.substring(1);
+
+                    return Component.nullToEmpty(capitalizedRank);
                 });
 
         register(
@@ -105,7 +110,7 @@ public class PlaceholdersWrapper {
                 "power",
                 (member) -> {
                     Faction faction = member.getFaction();
-                    if (faction == null) return UNFORMATTED_NULL;
+                    if (faction == null) return Component.literal("0");
 
                     return Component.nullToEmpty(String.valueOf(faction.getPower()));
                 });
@@ -130,7 +135,7 @@ public class PlaceholdersWrapper {
                 "max_power",
                 (member) -> {
                     Faction faction = member.getFaction();
-                    if (faction == null) return UNFORMATTED_NULL;
+                    if (faction == null) return Component.literal("0");
 
                     return Component.nullToEmpty(String.valueOf(faction.calculateMaxPower()));
                 });
@@ -145,7 +150,7 @@ public class PlaceholdersWrapper {
                 "required_power",
                 (member) -> {
                     Faction faction = member.getFaction();
-                    if (faction == null) return UNFORMATTED_NULL;
+                    if (faction == null) return Component.literal("0");
 
                     return Component.nullToEmpty(
                             String.valueOf(
@@ -165,6 +170,170 @@ public class PlaceholdersWrapper {
                     return Component.literal(String.valueOf(reqPower))
                             .setStyle(Style.EMPTY.withColor(rgbToInt(red, 85, 85)));
                 });
+
+        register(
+                "expand_status",
+                (member) -> {
+                    Faction faction = member.getFaction();
+                    if (faction == null) return Component.empty();
+
+                    int maxPower = faction.calculateMaxPower() + faction.getAdminPower();
+                    
+                    int reqPower = faction.getClaims().size() * FactionsMod.CONFIG.POWER.CLAIM_WEIGHT;
+                    int expandPower = reqPower + FactionsMod.CONFIG.POWER.CLAIM_WEIGHT;
+
+                    if (maxPower < expandPower) {
+                        return Component.empty()
+                                .append(Component.literal("Not Expandable").withStyle(ChatFormatting.RED));
+                    } 
+                    else {
+                        return Component.empty()
+                                .append(Component.literal("Expandable").withStyle(ChatFormatting.GREEN));
+                    }
+                });
+
+        register(
+                "is_protected",
+                (member) -> {
+                    Faction faction = member.getFaction();
+                    
+                    if (faction == null) return Component.literal("Unprotected").withStyle(ChatFormatting.RED);
+
+                    int currentPower = faction.getPower();
+                    int reqPower = faction.getClaims().size() * FactionsMod.CONFIG.POWER.CLAIM_WEIGHT;
+
+                    if ((currentPower >= reqPower) && (reqPower != 0)) {
+                        return Component.literal("Protected").withStyle(ChatFormatting.GREEN);
+                    } else {
+                        return Component.literal("Unprotected").withStyle(ChatFormatting.RED);
+                    }
+                });
+        register(
+                "shield_req",
+                (member) -> {
+                    Faction faction = member.getFaction();
+                    if (faction == null) return Component.empty();
+
+                    int currentPower = faction.getPower();
+                    int reqPower = faction.getClaims().size() * FactionsMod.CONFIG.POWER.CLAIM_WEIGHT;
+
+                    if ((reqPower == 0)) {
+                        return Component.empty();
+                    }
+                    else if ((currentPower >= reqPower)) {
+                        return Component.literal((reqPower + "/" + currentPower)).withStyle(ChatFormatting.GREEN);
+                    } else {
+                        return Component.literal((reqPower + "/" + currentPower)).withStyle(ChatFormatting.RED);
+                    }
+                });
+        Placeholders.register(
+                Identifier.fromNamespaceAndPath(FactionsMod.MODID, "radar"),
+                (ctx, argument) -> {
+                    if (!ctx.hasPlayer()) return PlaceholderResult.invalid("No player context");
+                    net.minecraft.server.level.ServerPlayer player = ctx.player();
+                    
+                    int x = player.getBlockX() >> 4;
+                    int z = player.getBlockZ() >> 4;
+                    String level = player.level().dimension().identifier().toString();
+                    
+                    Claim claim = Claim.get(x, z, level);
+                    if (claim != null) {
+                        Faction owner = claim.getFaction();
+                        return PlaceholderResult.value(Component.literal(owner.getName()).withStyle(owner.getColor()));
+                    }
+                    return PlaceholderResult.value(Component.literal("Wilderness").withStyle(ChatFormatting.DARK_GREEN));
+                });
+        Placeholders.register(
+                Identifier.fromNamespaceAndPath(FactionsMod.MODID, "relation"),
+                (ctx, argument) -> {
+                    if (!ctx.hasPlayer()) return PlaceholderResult.invalid("No player context");
+                    net.minecraft.server.level.ServerPlayer player = ctx.player();
+                    
+                    int x = player.getBlockX() >> 4;
+                    int z = player.getBlockZ() >> 4;
+                    String level = player.level().dimension().identifier().toString();
+                    
+                    Claim claim = Claim.get(x, z, level);
+                    if (claim == null) {
+                        return PlaceholderResult.value(Component.literal("Neutral").withStyle(ChatFormatting.WHITE));
+                    }
+                    
+                    User user = User.get(player.getUUID());
+                    Faction playerFaction = user.getFaction();
+                    Faction claimOwner = claim.getFaction();
+                    
+                    if (playerFaction == null) {
+                        return PlaceholderResult.value(Component.literal("Neutral").withStyle(ChatFormatting.WHITE));
+                    }
+                    
+                    if (claimOwner.getID().equals(playerFaction.getID())) {
+                        return PlaceholderResult.value(Component.literal("Your Land").withStyle(ChatFormatting.GREEN));
+                    }
+                    
+                    io.icker.factions.api.persistents.Relationship rel = playerFaction.getRelationship(claimOwner.getID());
+                    
+                    if (rel == null) {
+                        return PlaceholderResult.value(Component.literal("Neutral").withStyle(ChatFormatting.WHITE));
+                    } else if (rel.status == io.icker.factions.api.persistents.Relationship.Status.ALLY) {
+                        return PlaceholderResult.value(Component.literal("Ally").withStyle(ChatFormatting.LIGHT_PURPLE));
+                    } else if (rel.status == io.icker.factions.api.persistents.Relationship.Status.ENEMY) {
+                        return PlaceholderResult.value(Component.literal("Enemy").withStyle(ChatFormatting.RED));
+                    }
+                    
+                    return PlaceholderResult.value(Component.literal("Neutral").withStyle(ChatFormatting.WHITE));
+                });
+
+        register("top_1", (member) -> getTopFaction(0, member));
+        register("top_2", (member) -> getTopFaction(1, member));
+        register("top_3", (member) -> getTopFaction(2, member));
+
+        register(
+                "leaderboard_rank",
+                (member) -> {
+                    Faction faction = member.getFaction();
+                    if (faction == null) return Component.empty();
+
+                    List<Faction> sorted = Faction.all().stream()
+                            .sorted((f1, f2) -> Integer.compare(f2.getPower(), f1.getPower()))
+                            .collect(java.util.stream.Collectors.toList());
+
+                    int rank = sorted.indexOf(faction) + 1;
+                    
+                    if (rank <= 3 && rank > 0) {
+                        return Component.empty();
+                    }
+                    
+                    return Component.empty()
+                            .append(Component.literal(rank + ". ").withStyle(ChatFormatting.YELLOW))
+                            .append(Component.literal(faction.getName()).withStyle(faction.getColor()))
+                            .append(Component.literal(" - " + faction.getPower()).withStyle(ChatFormatting.YELLOW));
+                });
+    }
+
+    private static Component getTopFaction(int index, User member) {
+        List<Faction> sorted = Faction.all().stream()
+                .sorted((f1, f2) -> Integer.compare(f2.getPower(), f1.getPower()))
+                .collect(java.util.stream.Collectors.toList());
+
+        if (index < sorted.size()) {
+            Faction f = sorted.get(index);
+            
+            boolean isPlayerFaction = member.isInFaction() && member.getFaction().getID().equals(f.getID());
+            
+            if (isPlayerFaction) {
+                return Component.empty()
+                        .append(Component.literal((index + 1) + ". ").withStyle(ChatFormatting.YELLOW))
+                        .append(Component.literal(f.getName()).withStyle(f.getColor()))
+                        .append(Component.literal(" - " + f.getPower()).withStyle(ChatFormatting.YELLOW));
+            } else {
+                return Component.empty()
+                        .append(Component.literal((index + 1) + ". ").withStyle(ChatFormatting.WHITE))
+                        .append(Component.literal(f.getName()).withStyle(f.getColor()))
+                        .append(Component.literal(" - " + f.getPower()).withStyle(ChatFormatting.WHITE));
+            }
+        } else {
+            return Component.literal((index + 1) + ". ---").withStyle(ChatFormatting.DARK_GRAY);
+        }
     }
 
     private static int rgbToInt(int red, int green, int blue) {

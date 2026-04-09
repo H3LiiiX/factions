@@ -108,6 +108,10 @@ public class Faction {
     }
 
     public static Collection<Faction> all() {
+        return STORE.values().stream().filter(f -> !f.getName().equals("Spawn")).toList();
+    }
+
+    public static Collection<Faction> allIncludeHidden() {
         return STORE.values();
     }
 

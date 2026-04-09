@@ -5,6 +5,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 
+import io.icker.factions.FactionsMod;
 import io.icker.factions.api.events.RelationshipEvents;
 import io.icker.factions.api.persistents.Faction;
 import io.icker.factions.api.persistents.Relationship;
@@ -42,7 +43,7 @@ public class DeclareCommand implements Command {
 
         Faction targetFaction = Faction.getByName(name);
 
-        if (targetFaction == null) {
+        if (targetFaction == null || (FactionsMod.CONFIG.SPAWN.ENABLED && targetFaction.getName().equals("Spawn"))) {
             new Message(Component.translatable("factions.command.declare.fail.nonexistent_faction"))
                     .fail()
                     .send(player, false);

@@ -17,6 +17,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class ListCommand implements Command {
     private int run(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
@@ -30,7 +32,10 @@ public class ListCommand implements Command {
             return 1;
         }
 
-        Collection<Faction> factions = Faction.all();
+        Collection<Faction> factions = Faction.all().stream()
+                .filter(f -> !(FactionsMod.CONFIG.SPAWN.ENABLED && f.getName().equals("Spawn")))
+                .collect(Collectors.toList());
+                
         int size = factions.size();
 
         new Message(Component.translatable("factions.gui.list.title")).send(player, false);

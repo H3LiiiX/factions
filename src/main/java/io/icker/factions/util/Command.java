@@ -11,6 +11,7 @@ import io.icker.factions.api.persistents.User;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.permissions.Permission;
@@ -120,6 +121,17 @@ public interface Command {
                                                                     .equals(f.getID()))
                                     .map(f -> f.getName())
                                     .toArray(String[]::new));
+        }
+
+        public static SuggestionProvider<CommandSourceStack> allColors() {
+            return (context, builder) -> {
+                for (ChatFormatting format : ChatFormatting.values()) {
+                    if (format.isColor() && format != ChatFormatting.YELLOW) {
+                        builder.suggest(format.getName());
+                    }
+                }
+                return builder.buildFuture();
+            };
         }
 
         static SuggestionProvider<CommandSourceStack> allPlayers() {

@@ -14,6 +14,7 @@ import io.icker.factions.api.persistents.User;
 import io.icker.factions.ui.AdminGui;
 import io.icker.factions.util.Command;
 import io.icker.factions.util.Message;
+import io.icker.factions.config.Config;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
@@ -165,6 +166,18 @@ public class AdminCommand implements Command {
         return 1;
     }
 
+    private int reloadConfig(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        ServerPlayer player = context.getSource().getPlayerOrException();
+
+        FactionsMod.CONFIG = Config.load();
+
+        new Message(Component.literal("Factions configuration reloaded successfully."))
+                .format(ChatFormatting.GREEN)
+                .send(player, false);
+
+        return 1;
+    }
+
     public LiteralCommandNode<CommandSourceStack> getNode() {
         return Commands.literal("admin")
                 .requires(
@@ -220,6 +233,13 @@ public class AdminCommand implements Command {
                                                 "factions.admin.audit",
                                                 FactionsMod.CONFIG.REQUIRED_BYPASS_LEVEL))
                                 .executes(this::audit))
+                .then(
+                        Commands.literal("reloadconfig")
+                                .requires(
+                                        Requires.hasPerms(
+                                                "factions.admin.reloadconfig",
+                                                FactionsMod.CONFIG.REQUIRED_BYPASS_LEVEL))
+                                .executes(this::reloadConfig))
                 .build();
     }
 }

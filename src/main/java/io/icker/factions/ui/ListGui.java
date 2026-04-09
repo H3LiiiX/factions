@@ -3,6 +3,7 @@ package io.icker.factions.ui;
 import eu.pb4.sgui.api.ClickType;
 import eu.pb4.sgui.api.elements.GuiElementBuilder;
 
+import io.icker.factions.FactionsMod;
 import io.icker.factions.api.persistents.Faction;
 import io.icker.factions.api.persistents.Home;
 import io.icker.factions.api.persistents.User;
@@ -20,6 +21,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ListGui extends PagedGui {
     List<Faction> factions;
@@ -30,9 +32,12 @@ public class ListGui extends PagedGui {
         super(player, closeCallback);
         this.user = user;
 
-        this.factions = new ArrayList<>(Faction.all().stream().toList());
+        this.factions = new ArrayList<>(Faction.all().stream()
+                .filter(f -> !(FactionsMod.CONFIG.SPAWN.ENABLED && f.getName().equals("Spawn")))
+                .collect(Collectors.toList()));
+                
         Faction userFaction;
-        if ((userFaction = user.getFaction()) != null) {
+        if ((userFaction = user.getFaction()) != null && !userFaction.getName().equals("Spawn")) {
             this.factions.remove(userFaction);
             this.factions.addFirst(userFaction);
         }

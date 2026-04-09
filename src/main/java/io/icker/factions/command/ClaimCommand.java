@@ -83,6 +83,14 @@ public class ClaimCommand implements Command {
             for (int y = -size + 1; y < size; y++) {
                 ChunkPos chunkPos =
                         world.getChunk(player.blockPosition().offset(x * 16, 0, y * 16)).getPos();
+                
+                if (FactionsMod.CONFIG.DISABLE_END_ISLAND_CLAIMS && dimension.equals("minecraft:the_end") && chunkPos.x >= -11 && chunkPos.x <= 11 && chunkPos.z >= -11 && chunkPos.z <= 11) {
+                    new Message(Component.literal("You cannot claim the main End island!").withStyle(ChatFormatting.RED))
+                            .fail()
+                            .send(player, false);
+                    return 0;
+                }
+
                 Claim existingClaim = Claim.get(chunkPos.x, chunkPos.z, dimension);
 
                 if (existingClaim != null) {
@@ -137,12 +145,13 @@ public class ClaimCommand implements Command {
         return 1;
     }
 
-    private int add(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+private int add(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         ServerPlayer player = context.getSource().getPlayerOrException();
         Faction faction = Command.getUser(player).getFaction();
 
         int requiredPower =
                 (faction.getClaims().size() + 1) * FactionsMod.CONFIG.POWER.CLAIM_WEIGHT;
+        
         int maxPower =
                 faction.getUsers().size() * FactionsMod.CONFIG.POWER.MEMBER
                         + FactionsMod.CONFIG.POWER.BASE
@@ -161,10 +170,25 @@ public class ClaimCommand implements Command {
     private int addSize(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         int size = IntegerArgumentType.getInteger(context, "size");
         ServerPlayer player = context.getSource().getPlayerOrException();
+        ServerLevel world = (ServerLevel) player.level();
+        String dimension = world.dimension().identifier().toString();
         Faction faction = Command.getUser(player).getFaction();
 
+        int newChunks = 0;
+        for (int x = -size + 1; x < size; x++) {
+            for (int y = -size + 1; y < size; y++) {
+                ChunkPos chunkPos = world.getChunk(player.blockPosition().offset(x * 16, 0, y * 16)).getPos();
+                Claim existingClaim = Claim.get(chunkPos.x, chunkPos.z, dimension);
+                
+                if (existingClaim == null || !existingClaim.getFaction().equals(faction)) {
+                    newChunks++;
+                }
+            }
+        }
+
         int requiredPower =
-                (faction.getClaims().size() + 1) * FactionsMod.CONFIG.POWER.CLAIM_WEIGHT;
+                (faction.getClaims().size() + newChunks) * FactionsMod.CONFIG.POWER.CLAIM_WEIGHT;
+        
         int maxPower =
                 faction.getUsers().size() * FactionsMod.CONFIG.POWER.MEMBER
                         + FactionsMod.CONFIG.POWER.BASE

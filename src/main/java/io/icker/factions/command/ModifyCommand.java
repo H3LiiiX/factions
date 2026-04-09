@@ -117,6 +117,13 @@ public class ModifyCommand implements Command {
         CommandSourceStack source = context.getSource();
         ServerPlayer player = source.getPlayerOrException();
 
+        if (color == ChatFormatting.YELLOW) {
+            new Message(Component.literal("The color yellow is reserved and cannot be used."))
+                    .fail()
+                    .send(player, false);
+            return 0;
+        }
+
         Faction faction = Command.getUser(player).getFaction();
 
         faction.setColor(color);
@@ -197,6 +204,7 @@ public class ModifyCommand implements Command {
                                 .requires(Requires.hasPerms("factions.modify.color", 0))
                                 .then(
                                         Commands.argument("color", ColorArgument.color())
+                                                .suggests(Suggests.allColors()) // HOOK SUGGESTIONS
                                                 .executes(this::color)))
                 .then(
                         Commands.literal("open")

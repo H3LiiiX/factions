@@ -37,9 +37,9 @@ public class Config {
                         .disableHtmlEscaping()
                         .serializeNulls()
                         .registerTypeAdapter(HomeConfig.class, new Deserializer<>(HomeConfig.class))
-                        .registerTypeAdapter(
-                                PowerConfig.class, new Deserializer<>(PowerConfig.class))
+                        .registerTypeAdapter(PowerConfig.class, new Deserializer<>(PowerConfig.class))
                         .registerTypeAdapter(SafeConfig.class, new Deserializer<>(SafeConfig.class))
+                        .registerTypeAdapter(SpawnConfig.class, new Deserializer<>(SpawnConfig.class))
                         .create();
 
         try {
@@ -97,6 +97,9 @@ public class Config {
     @SerializedName("relationships")
     public RelationshipConfig RELATIONSHIPS = new RelationshipConfig();
 
+    @SerializedName("spawn")
+    public SpawnConfig SPAWN = new SpawnConfig();
+
     @SerializedName("maxFactionSize")
     public int MAX_FACTION_SIZE = -1;
 
@@ -109,8 +112,48 @@ public class Config {
     @SerializedName("claimProtections")
     public boolean CLAIM_PROTECTION = true;
 
+    @SerializedName("disableEndIslandClaims")
+    public boolean DISABLE_END_ISLAND_CLAIMS = false;
+
     @SerializedName("language")
     public String LANGUAGE = "en_us";
+
+    public static class SpawnConfig {
+        @SerializedName("enabled")
+        public boolean ENABLED = false;
+
+        @SerializedName("x")
+        public int X = 0;
+
+        @SerializedName("z")
+        public int Z = 0;
+
+        @SerializedName("size")
+        public int SIZE = 1;
+
+        @SerializedName("circle")
+        public boolean CIRCLE = false;
+
+        @SerializedName("permissions")
+        public SpawnPermissionsConfig PERMISSIONS = new SpawnPermissionsConfig();
+    }
+
+    public static class SpawnPermissionsConfig {
+        @SerializedName("build")
+        public boolean BUILD = false;
+
+        @SerializedName("interactBlocks")
+        public boolean INTERACT_BLOCKS = true;
+
+        @SerializedName("interactEntities")
+        public boolean INTERACT_ENTITIES = true;
+
+        @SerializedName("useItems")
+        public boolean USE_ITEMS = true;
+        
+        @SerializedName("damageEntities")
+        public boolean DAMAGE_ENTITIES = false;
+    }
 
     public static class DisplayConfig {
         @SerializedName("factionNameMaxLength")
@@ -124,7 +167,7 @@ public class Config {
 
         @SerializedName("nameBlackList")
         public List<String> NAME_BLACKLIST =
-                List.of("wilderness", "factionless", "без фракции"); // means no faction in english
+                List.of("wilderness", "factionless", "без фракции", "spawn"); 
 
         @SerializedName("powerMessage")
         public boolean POWER_MESSAGE = true;

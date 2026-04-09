@@ -6,6 +6,7 @@ import io.icker.factions.api.persistents.Claim;
 import io.icker.factions.api.persistents.Faction;
 import io.icker.factions.api.persistents.Relationship.Permissions;
 import io.icker.factions.api.persistents.User;
+import io.icker.factions.config.Config.SpawnPermissionsConfig;
 import io.icker.factions.core.InteractionsUtil.InteractionsUtilActions;
 import io.icker.factions.mixin.ItemInvoker;
 
@@ -317,6 +318,23 @@ public class InteractionManager {
         if (claim == null) return InteractionResult.PASS;
 
         Faction claimFaction = claim.getFaction();
+
+        if (FactionsMod.CONFIG.SPAWN.ENABLED && claimFaction.getName().equals("Spawn")) {
+            SpawnPermissionsConfig spawnPerms = FactionsMod.CONFIG.SPAWN.PERMISSIONS;
+            boolean allowed = false;
+            if (permission == Permissions.BREAK_BLOCKS || permission == Permissions.PLACE_BLOCKS) {
+                allowed = spawnPerms.BUILD;
+            } else if (permission == Permissions.USE_BLOCKS || permission == Permissions.USE_INVENTORIES) {
+                allowed = spawnPerms.INTERACT_BLOCKS;
+            } else if (permission == Permissions.USE_ENTITIES) {
+                allowed = spawnPerms.INTERACT_ENTITIES;
+            } else if (permission == Permissions.ATTACK_ENTITIES) {
+                allowed = spawnPerms.DAMAGE_ENTITIES;
+            } else {
+                allowed = spawnPerms.USE_ITEMS; 
+            }
+            return allowed ? InteractionResult.SUCCESS : InteractionResult.FAIL;
+        }
 
         if (claimFaction.getClaims().size() * FactionsMod.CONFIG.POWER.CLAIM_WEIGHT
                 > claimFaction.getPower()) {
