@@ -26,6 +26,7 @@ import io.icker.factions.config.Config;
 import io.icker.factions.core.ChatManager;
 import io.icker.factions.core.FactionsManager;
 import io.icker.factions.core.InteractionManager;
+import io.icker.factions.core.RestApiBridge;
 import io.icker.factions.core.ServerManager;
 import io.icker.factions.core.SoundManager;
 import io.icker.factions.core.WorldManager;
@@ -69,6 +70,7 @@ public class FactionsMod implements ModInitializer {
                 FabricLoader.getInstance().isModLoaded("squaremap") ? new SquareMapWrapper() : null;
 
         if (FabricLoader.getInstance().isModLoaded("placeholder-api")) PlaceholdersWrapper.init();
+        if (FabricLoader.getInstance().isModLoaded("mcrestapi")) RestApiBridge.register();
 
         ChatManager.register();
         FactionsManager.register();

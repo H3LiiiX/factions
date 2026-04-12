@@ -142,8 +142,16 @@ public class SerializerRegistry {
     private static <T extends Enum<T>> Serializer<T, StringTag> createEnumSerializer(
             Class<T> clazz) {
         return new Serializer<T, StringTag>(
-                val -> StringTag.valueOf(val.toString()),
-                el -> Enum.valueOf(clazz, el.asString().orElse("")));
+                val -> val != null ? StringTag.valueOf(val.toString()) : StringTag.valueOf(""),
+                el -> {
+                    String name = el.asString().orElse("");
+                    if (name.isEmpty()) return null;
+                    try {
+                        return Enum.valueOf(clazz, name);
+                    } catch (IllegalArgumentException e) {
+                        return null;
+                    }
+                });
     }
 
     public record InventoryItem(int slot, ItemStack stack) {
