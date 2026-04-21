@@ -280,6 +280,7 @@ public class Faction {
     }
 
     public void remove() {
+        FactionEvents.DISBAND.invoker().onDisband(this);
         for (User user : getUsers()) {
             user.leaveFaction();
         }
@@ -291,7 +292,6 @@ public class Faction {
         }
         removeAllClaims();
         STORE.remove(id);
-        FactionEvents.DISBAND.invoker().onDisband(this);
     }
 
     @Override

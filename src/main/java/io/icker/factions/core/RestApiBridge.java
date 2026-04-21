@@ -15,28 +15,32 @@ import java.time.Instant;
 /**
  * Bridges Factions mod events into the MCRestAPI SSE stream.
  *
- * Only registered when mcrestapi is present (checked in FactionsMod.onInitialize).
- * Events are available on the /api/events/stream endpoint with the following types:
+ * Only registered when mcrestapi is present (checked in
+ * FactionsMod.onInitialize).
+ * Events are available on the /api/events/stream endpoint with the following
+ * types:
  *
- *   faction.created       — a new faction was created
- *   faction.disbanded     — a faction was disbanded
- *   faction.member_join   — a player joined a faction
- *   faction.member_leave  — a player left (or was kicked from) a faction
- *   faction.modified      — faction name/description/motd/color/open changed
- *   faction.home_set      — faction home was set or cleared
- *   claim.added           — a chunk was claimed
- *   claim.removed         — a chunk claim was removed
- *   global.chat           — a player sent a message in global chat
- *   faction.chat          — a player sent a message in faction chat
+ * faction.created — a new faction was created
+ * faction.disbanded — a faction was disbanded
+ * faction.member_join — a player joined a faction
+ * faction.member_leave — a player left (or was kicked from) a faction
+ * faction.modified — faction name/description/motd/color/open changed
+ * faction.home_set — faction home was set or cleared
+ * claim.added — a chunk was claimed
+ * claim.removed — a chunk claim was removed
+ * global.chat — a player sent a message in global chat
+ * faction.chat — a player sent a message in faction chat
  *
  * REST endpoints registered via MCRestAPI's endpointProviders:
- *   GET /api/factions                — list all factions
- *   GET /api/factions/{id}/members   — list members of a specific faction
+ * GET /api/factions — list all factions
+ * GET /api/factions/{id}/members — list members of a specific faction
  *
  * Each SSE event's `content` field is a JSON string with structured data.
- * The `player` field holds the triggering player's UUID where applicable, otherwise null.
+ * The `player` field holds the triggering player's UUID where applicable,
+ * otherwise null.
  *
- * Note: faction.power_change is intentionally omitted — it fires very frequently
+ * Note: faction.power_change is intentionally omitted — it fires very
+ * frequently
  * (every power tick and on player deaths) and would flood the stream.
  */
 public class RestApiBridge {
@@ -44,7 +48,8 @@ public class RestApiBridge {
     public static void register() {
         FactionEvents.CREATE.register((faction, owner) -> {
             try {
-                if (faction == null || owner == null) return;
+                if (faction == null || owner == null)
+                    return;
                 JsonObject data = new JsonObject();
                 data.addProperty("factionId", faction.getID().toString());
                 data.addProperty("factionName", faction.getName());
@@ -59,7 +64,8 @@ public class RestApiBridge {
 
         FactionEvents.DISBAND.register((faction) -> {
             try {
-                if (faction == null) return;
+                if (faction == null)
+                    return;
                 JsonObject data = new JsonObject();
                 data.addProperty("factionId", faction.getID().toString());
                 data.addProperty("factionName", faction.getName());
@@ -73,7 +79,8 @@ public class RestApiBridge {
 
         FactionEvents.MEMBER_JOIN.register((faction, user) -> {
             try {
-                if (faction == null || user == null) return;
+                if (faction == null || user == null)
+                    return;
                 JsonObject data = new JsonObject();
                 data.addProperty("factionId", faction.getID().toString());
                 data.addProperty("factionName", faction.getName());
@@ -87,7 +94,8 @@ public class RestApiBridge {
 
         FactionEvents.MEMBER_LEAVE.register((faction, user) -> {
             try {
-                if (faction == null || user == null) return;
+                if (faction == null || user == null)
+                    return;
                 JsonObject data = new JsonObject();
                 data.addProperty("factionId", faction.getID().toString());
                 data.addProperty("factionName", faction.getName());
@@ -100,7 +108,8 @@ public class RestApiBridge {
 
         FactionEvents.MODIFY.register((faction) -> {
             try {
-                if (faction == null) return;
+                if (faction == null)
+                    return;
                 JsonObject data = new JsonObject();
                 data.addProperty("factionId", faction.getID().toString());
                 data.addProperty("factionName", faction.getName());
@@ -116,7 +125,8 @@ public class RestApiBridge {
 
         FactionEvents.SET_HOME.register((faction, home) -> {
             try {
-                if (faction == null) return;
+                if (faction == null)
+                    return;
                 JsonObject data = new JsonObject();
                 data.addProperty("factionId", faction.getID().toString());
                 data.addProperty("factionName", faction.getName());
@@ -137,7 +147,8 @@ public class RestApiBridge {
         ClaimEvents.ADD.register((claim) -> {
             try {
                 Faction faction = Faction.get(claim.factionID);
-                if (faction == null) return;
+                if (faction == null)
+                    return;
                 JsonObject data = new JsonObject();
                 data.addProperty("factionId", faction.getID().toString());
                 data.addProperty("factionName", faction.getName());
@@ -152,7 +163,8 @@ public class RestApiBridge {
 
         ClaimEvents.REMOVE.register((x, z, level, faction) -> {
             try {
-                if (faction == null) return;
+                if (faction == null)
+                    return;
                 JsonObject data = new JsonObject();
                 data.addProperty("factionId", faction.getID().toString());
                 data.addProperty("factionName", faction.getName());
@@ -170,7 +182,8 @@ public class RestApiBridge {
         ServerMessageEvents.CHAT_MESSAGE.register((message, sender, params) -> {
             try {
                 User user = User.get(sender.getUUID());
-                if (user == null) return;
+                if (user == null)
+                    return;
                 String rawMessage = message.signedContent();
                 String playerName = sender.getGameProfile().name();
                 String playerUuid = sender.getUUID().toString();
@@ -191,9 +204,11 @@ public class RestApiBridge {
                     }
                     push("global.chat", playerName, data);
                 } else if (user.chat == User.ChatMode.FACTION || user.chat == User.ChatMode.FOCUS) {
-                    if (!user.isInFaction()) return;
+                    if (!user.isInFaction())
+                        return;
                     Faction faction = user.getFaction();
-                    if (faction == null) return;
+                    if (faction == null)
+                        return;
                     JsonObject data = new JsonObject();
                     data.addProperty("factionId", faction.getID().toString());
                     data.addProperty("factionName", faction.getName());
@@ -209,17 +224,20 @@ public class RestApiBridge {
         });
 
         // Register /api/factions and /api/factions/{id}/members endpoints.
-        // These are called by MCRestAPI after the HTTP server is built but before it starts.
-        MCRestAPI.endpointProviders.add(router ->
-                router.register("/api/factions", new FactionsEndpoint(), "players.read"));
+        // These are called by MCRestAPI after the HTTP server is built but before it
+        // starts.
+        MCRestAPI.endpointProviders
+                .add(router -> router.register("/api/factions", new FactionsEndpoint(), "players.read"));
 
         FactionsMod.LOGGER.info("[Factions] MCRestAPI bridge registered");
     }
 
     private static void push(String type, String player, JsonObject data) {
-        if (MCRestAPI.eventCollector == null) return;
+        if (MCRestAPI.eventCollector == null)
+            return;
         ServerEvent event = new ServerEvent(type, player, data.toString(), Instant.now().toString());
-        // Dispatch to a virtual thread so SSE client I/O can never block the server thread.
+        // Dispatch to a virtual thread so SSE client I/O can never block the server
+        // thread.
         Thread.ofVirtual().start(() -> MCRestAPI.eventCollector.push(event));
     }
 }
